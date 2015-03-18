@@ -3,7 +3,6 @@ define( "MO_NOTRIM", 1 );
 define( "MO_ALLOWHTML", 2 );
 
 function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
-	static $array_count=0;
 	$Out='';
 	$fmt="(%s) => %s\n";
 	$fmtc="%s%s";
@@ -35,7 +34,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			}else 
 				$quellcode.='array(';
 //			$quellcode.=($inAryObj<0)?'array(':($inAryObj==0)?'array(':$name?"$name=array(":"array(";
-			$step+=3; $cc=0; $array_count++;
+			$step+=3; $cc=0;
 			$leer=str_repeat(' ',$step);
 			foreach($var as $k=>$v){
 				if(!$k)$k=$cc++; // if(!$k)continue;
@@ -47,7 +46,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			$step-=3;$leer=str_repeat(' ',$step);
 			$Out.="$leer] <i>End Array <b>$name</b></i>\n";
 			$quellcode=substr($quellcode,0,strlen($quellcode)-1)."\n$leer)";
-			if($inAryObj==0)$quellcode='$'.($name?$name:'myArray')."$array_count=$quellcode;";
+			if($inAryObj==0)$quellcode='$'.($name?$name:'myArray')."=$quellcode;";
 			break;
 		case 'object' :
 			$quellcode.='$'.($name?$name:'myObj')."=new stdClass();\n";
@@ -84,10 +83,10 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 	return $Out;
 }
 function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
-	$display=$VarName?$VarName." => <b>$VarName</b>":'';
+	$display=$VarName?" => <b>$VarName</b>":'';
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
-	echo "<em>--=> DUMP".($mode=='dump'?'VAR':'CODE')."$display <=---------------------------</em><br>";
+	echo "<em>--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
 	if($mode=='dump')echo '<code>'.nl2br(str_replace(' ','&nbsp;', $code)).'</code>'; 
 	if($mode=='code')echo '<code>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'</code>'; 
 }
@@ -172,11 +171,11 @@ function CleanTextArray($text){
 }
 function CreateIdentByName($name) {
 	$ident = str_replace(' ', '', $name);
-	$ident = str_replace(array('�','�','�','�','�','�'), array('oe', 'ae','ue','Oe', 'Ae','Ue' ), $ident);
+	$ident = str_replace(array('?','?','?','?','?','?'), array('oe', 'ae','ue','Oe', 'Ae','Ue' ), $ident);
 	$ident = str_replace(array('"','\'','%','&','(',')','=','#','<','>','|','\\'), '', $ident);
 	$ident = str_replace(array(',','.',':',';','!','?'), '', $ident);
 	$ident = str_replace(array('+','-','/','*'), '', $ident);
-	$ident = str_replace(array('�'), 'ss', $ident);
+	$ident = str_replace(array('?'), 'ss', $ident);
 	return $ident;
 }
 function CombineObject(&$source, &$target) {
