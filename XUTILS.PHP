@@ -39,7 +39,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			foreach($var as $k=>$v){
 				if(!$k)$k=$cc++; // if(!$k)continue;
 				$Out.="$leer<b>$k</b> ";
-				$quellcode.="\n$leer\"$k\"=>";
+				$quellcode.="\n$leer".(is_string($k)?"'$k'":$k)."=>";
 				$Out.=trim(dump($v, $ShowFunc, $step,-1,$k, $quellcode))."\n";
 				$quellcode.=",";
 			}
@@ -86,10 +86,14 @@ function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
 	$display=$VarName?" => <b>$VarName</b>":'';
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
-	echo "<em>--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
+	echo "<em>//--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
 	if($mode=='dump')echo '<code>'.nl2br(str_replace(' ','&nbsp;', $code)).'</code>'; 
-	if($mode=='code')echo '<code>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'</code>'; 
+	if($mode=='code')echo '<code>&lt;?<br>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'<br>?&gt;</code>'; 
 }
+function dumpcode($var, $VarName=''){
+	dumpvar($var,$VarName,false,'code');
+}	
+	
 function vardump($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
 	return dumpvar($var,$VarName,$ShowFunc,$mode);
 }	
