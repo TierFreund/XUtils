@@ -3,6 +3,8 @@ define( "MO_NOTRIM", 1 );
 define( "MO_ALLOWHTML", 2 );
 
 function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
+	static $codingsDetect=array("UTF-8","ISO-8859-1","ASCII");
+
 	$Out='';
 	$fmt="(%s) => %s\n";
 	$fmtc="%s%s";
@@ -21,8 +23,9 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			$Out.=sprintf($fmt,'float',$var); 
 			break;
 		case 'string' : 
+			$coding=mb_detect_encoding($var,$codingsDetect);
 			$quellcode.=sprintf($fmtc,"'$var'",$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'string',"'".htmlspecialchars($var)."'");
+			$Out.=sprintf($fmt,'string',"'".htmlspecialchars($var,ENT_COMPAT|ENT_HTML401,$coding)."'");
 			break; 
 		case 'array'  :  
 			if($inAryObj!=0)$Out.=str_repeat(' ',$step);;
@@ -83,6 +86,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 	return $Out;
 }
 function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
+
 	$display=$VarName?" => <b>$VarName</b>":'';
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
