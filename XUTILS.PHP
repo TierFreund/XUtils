@@ -12,26 +12,26 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 	switch($typ){
 		case 'boolean': 
 			$quellcode.=sprintf($fmtc,$var?'true':'false',$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'bool',$var?'true':'false');
+			$Out.=sprintf($fmt,'bool','<a::style="color:#FF00FF">'.($var?'true':'false').'</a>');
 			break; 
 		case 'integer': 
 			$quellcode.=sprintf($fmtc,$var,$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'int',$var);
+			$Out.=sprintf($fmt,'int','<a::style="color:#008000">'.$var.'</a>');
 			break; 
 		case 'double' : 
 			$quellcode.=sprintf($fmtc,$var,$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'float',$var); 
+			$Out.=sprintf($fmt,'float','<a::style="color:#000080">'.$var.'</a>'); 
 			break;
 		case 'string' : 
 			$coding=mb_detect_encoding($var,$codingsDetect);
 			$quellcode.=sprintf($fmtc,"'$var'",$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'string',"'".htmlspecialchars($var,ENT_COMPAT|ENT_HTML401,$coding)."'");
+			$Out.=sprintf($fmt,'string','\'<a::style="color:#800000;">'.htmlspecialchars($var,ENT_COMPAT|ENT_HTML401,$coding).'</a>\'');
 			break; 
 		case 'array'  :  
 			if($inAryObj!=0)$Out.=str_repeat(' ',$step);;
-			$Out.="=> Array [\n";
+			$Out.='=> <a::style="color:#008080;">Array</a> ['."\n";
 			if($inAryObj>0){
-				$quellcode.=$name?"$name=array(":"array(";
+				$quellcode.=$name?"$name=array(":'array(';
 			}else if($inAryObj!=0){
 				$quellcode.='array(';
 			}else 
@@ -48,7 +48,10 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			}
 			$step-=3;$leer=str_repeat(' ',$step);
 			$Out.="$leer] <i>End Array <b>$name</b></i>\n";
-			$quellcode=substr($quellcode,0,strlen($quellcode)-1)."\n$leer)";
+			$qlen=strlen($quellcode);
+			if($quellcode[$qlen-1]==',')
+				$quellcode=substr($quellcode,0,$qlen-1)."\n$leer)";
+			else $quellcode.="\n$leer)";
 			if($inAryObj==0)$quellcode='$'.($name?$name:'myArray')."=$quellcode;";
 			break;
 		case 'object' :
@@ -91,7 +94,7 @@ function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
 	echo "<em>//--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
-	if($mode=='dump')echo '<code>'.nl2br(str_replace(' ','&nbsp;', $code)).'</code>'; 
+	if($mode=='dump')echo '<code>'.nl2br(str_replace(array(' ','::'),array('&nbsp;',' '), $code)).'</code>'; 
 	if($mode=='code')echo '<code>&lt;?<br>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'<br>?&gt;</code>'; 
 }
 function dumpcode($var, $VarName=''){
