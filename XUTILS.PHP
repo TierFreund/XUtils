@@ -12,20 +12,20 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 	switch($typ){
 		case 'boolean': 
 			$quellcode.=sprintf($fmtc,$var?'true':'false',$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'bool','<a::style="color:#FF00FF">'.($var?'true':'false').'</a>');
+			$Out.=sprintf($fmt,'<a~+~style="color:#FF00FF">bool</a>',$var?'true':'false');
 			break; 
 		case 'integer': 
 			$quellcode.=sprintf($fmtc,$var,$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'int','<a::style="color:#008000">'.$var.'</a>');
+			$Out.=sprintf($fmt,'<a~+~style="color:#008000">int</a>',$var);
 			break; 
 		case 'double' : 
 			$quellcode.=sprintf($fmtc,$var,$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'float','<a::style="color:#000080">'.$var.'</a>'); 
+			$Out.=sprintf($fmt,'<a~+~style="color:#000080">float</a>',$var); 
 			break;
 		case 'string' : 
 			$coding=mb_detect_encoding($var,$codingsDetect);
 			$quellcode.=sprintf($fmtc,"'$var'",$inAryObj?'':";\n");
-			$Out.=sprintf($fmt,'string','\'<a::style="color:#800000;">'.htmlspecialchars($var,ENT_COMPAT|ENT_HTML401,$coding).'</a>\'');
+			$Out.=sprintf($fmt,'<a~+~style="color:#800000;">string</a>','\''.htmlspecialchars($var,ENT_COMPAT|ENT_HTML401,$coding).'\'');
 			break; 
 		case 'array'  :  
 			if($inAryObj!=0)$Out.=str_repeat(' ',$step);;
@@ -41,7 +41,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			$leer=str_repeat(' ',$step);
 			foreach($var as $k=>$v){
 				if(!$k)$k=$cc++; // if(!$k)continue;
-				$Out.="$leer<b>$k</b> ";
+				$Out.="$leer<b>$k</b>";
 				$quellcode.="\n$leer".(is_string($k)?"'$k'":$k)."=>";
 				$Out.=trim(dump($v, $ShowFunc, $step,-1,$k, $quellcode))."\n";
 				$quellcode.=",";
@@ -63,7 +63,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			foreach(get_object_vars($var) as $k=>$v){
 				if(!$k)$k=$cc++; // if(!$k)continue;
 				$quellcode.="{$name}->$k=";
-				$Out.="$leer<b>".htmlspecialchars($k)."</b> ";
+				$Out.="$leer<b>".htmlspecialchars($k)."</b>";
 //				$Out.=htmlspecialchars(trim(dump($v, $ShowFunc,$step,1,$k,$quellcode))."\n");
 				$Out.=trim(dump($v, $ShowFunc,$step,1,$k,$quellcode))."\n";
 			}
@@ -94,7 +94,7 @@ function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
 	echo "<em>//--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
-	if($mode=='dump')echo '<code>'.nl2br(str_replace(array(' ','::'),array('&nbsp;',' '), $code)).'</code>'; 
+	if($mode=='dump')echo '<code>'.nl2br(str_replace(array(' ','~+~'),array('&nbsp;',' '), $code)).'</code>'; 
 	if($mode=='code')echo '<code>&lt;?<br>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'<br>?&gt;</code>'; 
 }
 function dumpcode($var, $VarName=''){
@@ -174,7 +174,27 @@ function parse_html_header_data($head){
 	}
 	return $head;
 }
-
+function ping($host, $timeout=5){
+	$p=parse_url($host);
+	$host=empty($p['host'])?$host:$p['host'];
+	exec(sprintf('ping -n 1 -w %d %s',$timeout, escapeshellarg($host)), $res, $rval);	
+	if($rval !== 0)	return false;
+	foreach($res as $i=>$e)if(empty($e))unset($res[$i]);
+	array_shift($res);
+	if(preg_match('/([0-9]+).([0-9]+).([0-9]+).([0-9]+):? /',array_shift($res),$m))
+		return sprintf('%s.%s.%s.%s',$m[1],$m[2],$m[3],$m[4]);
+	return true;
+}
+function GetHostMac($hostIp){
+	exec('arp -a '.$hostIp, $res, $rval);	
+	if($rval !== 0)return false;
+	if(count($res)<2)return false;
+	$d=explode(' ',array_pop ($res));
+	foreach($d as $i=>$e)if(!$e)unset($d[$i]);
+	if(count($d)<2) return false;
+	array_shift($d);
+	return str_replace('-',':',array_shift($d));
+}
 function CleanTextArray($text){
 	$l=explode("\n",str_ireplace('&nbsp;',' ',strip_tags($text)));
 	$ll=array();foreach($l as $v){$v=trim($v);if($v)$ll[]=$v;}
