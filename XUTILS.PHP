@@ -1,8 +1,12 @@
 <?
-define( "MO_NOTRIM", 1 );
-define( "MO_ALLOWHTML", 2 );
+define( 'MO_NOTRIM', 	1 );
+define( 'MO_ALLOWHTML', 2 );
+//if (!defined('XUTILS_DEBUG')){
+//	define( 'XUTILS_DEBUG', true );
+//}	
 
 function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
+	
 	static $codingsDetect=array("UTF-8","ISO-8859-1","ASCII");
 
 	$Out='';
@@ -29,7 +33,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			break; 
 		case 'array'  :  
 			if($inAryObj!=0)$Out.=str_repeat(' ',$step);;
-			$Out.='=> <a::style="color:#008080;">Array</a> ['."\n";
+			$Out.='=> <a~+~style="color:#909090;">Array</a> ['."\n";
 			if($inAryObj>0){
 				$quellcode.=$name?"$name=array(":'array(';
 			}else if($inAryObj!=0){
@@ -58,7 +62,7 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
 			$quellcode.='$'.($name?$name:'myObj')."=new stdClass();\n";
 			$leer=str_repeat(' ',$step);
 			if($inAryObj!=0)$Out.=$leer;
-			$Out.="=> Object '".get_class($var)."' (\n";
+			$Out.="=> <a~+~style=\"color:#0F0FFF\">Object</a> '".get_class($var)."' (\n";
 			$step+=3;$cc=0; $leer=str_repeat(' ',$step);
 			foreach(get_object_vars($var) as $k=>$v){
 				if(!$k)$k=$cc++; // if(!$k)continue;
@@ -88,32 +92,70 @@ function dump($var,$ShowFunc=TRUE,$step=0, $inAryObj=0,$name='', &$quellcode){
  	}
 	return $Out;
 }
-function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
 
-	$display=$VarName?" => <b>$VarName</b>":'';
+function debugvar($var,$VarName,$Line='',$FunctionName='',$FileName='',$doReturnNoEcho=false){
+	if(defined('XUTILS_DEBUG') && XUTILS_DEBUG===false)return '';
+	$mode=$Line||$FunctionName||$FileName?[]:'dump';
+	if($FileName){
+		if(strpos($FileName,'\\')!==false &&($c=explode('\\',$FileName)))$FileName=end($c);
+		elseif(strpos($FileName,'/')!==false && ($c=explode('/',$FileName)))$FileName=end($c);
+		$mode[]="$FileName";
+	}if($FunctionName)$mode[]="=> $FunctionName(...)";
+	if($Line)$mode[]="=> Zeile: $Line";
+	if(is_array($VarName)&&isSet($VarName[0])){
+		$r=dumpvar($var,'',TRUE,$mode,$doReturnNoEcho);	
+		foreach($VarName as $var)$r.=dumpvar($var,'',TRUE,$mode,$doReturnNoEcho);	
+	}else $r=dumpvar($var,$VarName,TRUE,$mode,$doReturnNoEcho);
+	return $doReturnNoEcho?$r:false;
+}	
+function dumpvar($var,$VarName='',$ShowFunc=TRUE,$mode='dump',$doReturnNoEcho=false){
+	$display=$VarName?" => <b>$VarName</b> ":'';
+	if(is_array($mode)){
+		$display.='</em>['.implode(' ',$mode).']<em>';
+		$mode='debug';
+	}		
 	$quellcode='';
 	$code=dump($var,$ShowFunc,0,0,'', $quellcode);
-	echo "<em>//--=> DUMP".($mode=='dump'?'VAR':'CODE')." $display <=---------------------------</em><br>";
-	if($mode=='dump')echo '<code>'.nl2br(str_replace(array(' ','~+~'),array('&nbsp;',' '), $code)).'</code>'; 
-	if($mode=='code')echo '<code>&lt;?<br>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'<br>?&gt;</code>'; 
+	$r="<em>//--=> DUMP".($mode=='dump'?'VAR':($mode=='code'?'CODE':'DEBUG'))." $display <=---------------------------</em><br>";
+	if($mode=='code')$r.='<code>&lt;?<br>'.nl2br(str_replace(array(' ','myArray'),array('&nbsp;',$VarName?$VarName:'myArray'),$quellcode)).'<br>?&gt;</code>'; 
+	else $r.='<code>'.nl2br(str_replace(array(' ','~+~'),array('&nbsp;',' '), $code)).'</code>'; 
+	if($doReturnNoEcho) return $r;
+	echo $r;
+	return true;	
 }
-function dumpcode($var, $VarName=''){
-	dumpvar($var,$VarName,false,'code');
+function dumpvars(){
+	$in=func_get_args();
+	foreach($in as $var)dumpvar($var);
+}	
+function dumpcode($var, $VarName='',$doReturnNoEcho=false){
+	return dumpvar($var,$VarName,false,'code',$doReturnNoEcho=false);
 }	
 	
-function vardump($var,$VarName='',$ShowFunc=TRUE,$mode='dump'){
-	return dumpvar($var,$VarName,$ShowFunc,$mode);
+function vardump($var,$VarName='', $ShowFunc=TRUE,$doReturnNoEcho=false){
+	return dumpvar($var,$VarName, $ShowFunc,'dump',$doReturnNoEcho);
 }	
+
+function dumpString($string){
+	echo "-------- DUMPSTRING -------------------------------<br>String:: $string<br>";
+	for($j=0;$j<strlen($string);$j++){
+		echo "Z($j):: Ord(".ord($w[$j]).") = Chr('".$w[$j].'\')<br>';
+	}	
+}
 function Val2Var($v){
 	if(is_bool($v)===true)
         $v=(bool)$v;
     else if(is_numeric($v)===true){
 		if(is_double($v)===true)$v=(double)$v;
 		else $v=(integer)$v;
-	}
+	}elseif(is_string($v))
+		if(in_array($v,['true','True','y','Y']))$v=true;elseif(in_array($v,['false','False','n','N']))$v=false;
 	return $v;
 }
-	
+function console_log( $data ){
+  echo '<script>';
+  echo 'console.log('. json_encode( $data ) .')';
+  echo '</script>';
+}
 function parse_html_header($header){
 	@list($head, $body) = explode("\r\n\r\n", $header, 2);
 	$head=explode("\r\n",$head);
@@ -202,11 +244,10 @@ function CleanTextArray($text){
 }
 function CreateIdentByName($name) {
 	$ident = str_replace(' ', '', $name);
-	$ident = str_replace(array('?','?','?','?','?','?'), array('oe', 'ae','ue','Oe', 'Ae','Ue' ), $ident);
+	$ident = str_replace(array('ö','ä','ü','Ö','Ä','Ü','ß'), array('oe', 'ae','ue','Oe', 'Ae','Ue','ss'), $ident);
 	$ident = str_replace(array('"','\'','%','&','(',')','=','#','<','>','|','\\'), '', $ident);
 	$ident = str_replace(array(',','.',':',';','!','?'), '', $ident);
 	$ident = str_replace(array('+','-','/','*'), '', $ident);
-	$ident = str_replace(array('?'), 'ss', $ident);
 	return $ident;
 }
 function CombineObject(&$source, &$target) {
